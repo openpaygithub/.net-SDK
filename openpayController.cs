@@ -103,11 +103,32 @@ namespace openpaySDKDemo.Controllers
                 // - assign request XML here 
                 string _JamToken = WebConfigurationManager.AppSettings["_JamToken"];
                 string _AuthToken = WebConfigurationManager.AppSettings["_AuthToken"];
-                string inputXML = "<NewOnlineOrder>"
+               string inputXML = "<NewOnlineOrder>"
                                 + "<JamAuthToken>" + _JamToken + "</JamAuthToken>"
                                 + "<AuthToken>" + _AuthToken + "</AuthToken>"
                                 + "<PurchasePrice>" + _totalprice + ".00</PurchasePrice>"
                                 + "<PlanCreationType>Pending</PlanCreationType>"
+                                + "<RetailerOrderNo>" + _orderID + "</RetailerOrderNo>"
+                                + "<ChargeBackCount>0</ChargeBackCount>"
+                                + "<CustomerQuality>1</CustomerQuality>"
+                                + "<FirstName>" + _modelCO.FirstName + "</FirstName>"
+                                + "<OtherNames></OtherNames>"
+                                + "<FamilyName>" + _modelCO.LastName + "</FamilyName>"
+                                + "<Email>" + _modelCO.Email + "</Email>"
+                                + "<DateOfBirth>" + _modelCO.DOB + "</DateOfBirth>"
+                                + "<Gender></Gender>"
+                                + "<PhoneNumber></PhoneNumber>"
+                                + "<ResAddress1>" + _modelCO.Address + "</ResAddress1>"
+                                + "<ResAddress2></ResAddress2>"
+                                + "<ResSuburb>" + _modelCO.Subrub + "</ResSuburb>"
+                                + "<ResState>" + _modelCO.State + "</ResState>"
+                                + "<ResPostCode>" + _modelCO.PostCode + "</ResPostCode>"
+                                + "<DeliveryDate>" + DateTime.Now.ToString("dd mmm yyyy") + "</DeliveryDate>"
+                                + "<DelAddress1 >" + _modelCO.Address + "</DelAddress1>"
+                                + "<DelAddress2></DelAddress2>"
+                                + "<DelSuburb>" + _modelCO.Subrub + "</DelSuburb>"
+                                + "<DelState>" + _modelCO.State + "</DelState>"
+                                + "<DelPostCode>" + _modelCO.PostCode + "</DelPostCode>"
                                 + "</NewOnlineOrder>"; // - request
 
                 try
@@ -128,35 +149,28 @@ namespace openpaySDKDemo.Controllers
                         string JamCancelURL = strUrl + "openpay/CallBack";//Not more than 250 characters
                         string JamFailURL = strUrl + "openpay/CallBack";//Not more than 250 characters
                         string form_url = WebConfigurationManager.AppSettings["_GateWayURL" + IsLive()];
-                        string JamRetailerOrderNo = _orderID;//Consumer site order number
-                        string JamEmail = _modelCO.Email;//Not more than 150 characters
-                        string JamFirstName = _modelCO.FirstName;//First name(Not more than 50 characters)
-                        string JamOtherNames = "";//Middle name(Not more than 50 characters)
-                        string JamFamilyName = _modelCO.LastName;//Last name(Not more than 50 characters)
-                        string JamDateOfBirth = _modelCO.DOB;//dd mmm yyyy
-                        string JamResAddress1 = _modelCO.Address;//Not more than 100 characters
-                        string JamResAddress2 = "";//Not more than 100 characters
-                        string JamResSubrub = _modelCO.Subrub;//Not more than 100 characters
-                        string JamResState = _modelCO.State;//Not more than 3 characters
-                        string JamResPostCode = _modelCO.PostCode;//Not more than 4 characters
-                        string JamDelAddress1 = _modelCO.Address;//Not more than 100 characters
-                        string JamDelAddress2 = "";//Not more than 100 characters
-                        string JamDelSubrub = _modelCO.Subrub;//Not more than 100 characters
-                        string JamDelState = _modelCO.State;//Not more than 3 characters
-                        string JamDelPostCode = _modelCO.PostCode;//Not more than 4 characters
-                        string JamDeliveryDate = DateTime.Now.ToString("dd mmm yyyy");//dd mmm yyyy                                              
+                        string RetailerOrderNo = _orderID;//Consumer site order number
+                        string Email = _modelCO.Email;//Not more than 150 characters
+                        string FirstName = _modelCO.FirstName;//First name(Not more than 50 characters)
+                        string OtherNames = "";//Middle name(Not more than 50 characters)
+                        string FamilyName = _modelCO.LastName;//Last name(Not more than 50 characters)
+                        string DateOfBirth = _modelCO.DOB;//dd mmm yyyy
+                        string ResAddress1 = _modelCO.Address;//Not more than 100 characters
+                        string ResAddress2 = "";//Not more than 100 characters
+                        string ResSubrub = _modelCO.Subrub;//Not more than 100 characters
+                        string ResState = _modelCO.State;//Not more than 3 characters
+                        string ResPostCode = _modelCO.PostCode;//Not more than 4 characters
+                        string DelAddress1 = _modelCO.Address;//Not more than 100 characters
+                        string DelAddress2 = "";//Not more than 100 characters
+                        string DelSubrub = _modelCO.Subrub;//Not more than 100 characters
+                        string DelState = _modelCO.State;//Not more than 3 characters
+                        string DelPostCode = _modelCO.PostCode;//Not more than 4 characters
+                        string DeliveryDate = DateTime.Now.ToString("dd mmm yyyy");//dd mmm yyyy                                              
                         string JamPlanID = resultingMessage.PlanID;  //Plan ID
 
-                        string pagegurl = form_url + "?JamCallbackURL=" + JamCallbackURL + "&JamCancelURL=" + JamCancelURL 
-                            + "&JamFailURL=" + JamFailURL + "&JamAuthToken=" + urlencode(_JamToken) + "&JamPlanID=" + urlencode((string)JamPlanID) 
-                            + "&JamRetailerOrderNo=" + urlencode(JamRetailerOrderNo) + "&JamPrice=" + urlencode(PurchasePrice) + "&JamEmail=" 
-                            + urlencode(JamEmail) + "&JamFirstName=" + urlencode(JamFirstName) + "&JamOtherNames=" + urlencode(JamOtherNames) 
-                            + "&JamFamilyName=" + urlencode(JamFamilyName) + "&JamDateOfBirth=" + urlencode(JamDateOfBirth) + "&JamResAddress1=" 
-                            + urlencode(JamResAddress1) + "&JamResAddress2=" + urlencode(JamResAddress2) + "&JamResSubrub=" + urlencode(JamResSubrub) 
-                            + "&JamResState=" + urlencode(JamResState) + "&JamResPostCode=" + urlencode(JamResPostCode) + "&JamDelAddress1=" 
-                            + urlencode(JamDelAddress1) + "&JamDelAddress2=" + urlencode(JamDelAddress2) + "&JamDelSubrub=" + urlencode(JamDelSubrub) 
-                            + "&JamDelState=" + urlencode(JamDelState) + "&JamDelPostCode=" + urlencode(JamDelPostCode) + "&JamDeliveryDate=" 
-                            + urlencode(JamDeliveryDate);
+                        string pagegurl = form_url + "?JamCallbackURL=" + JamCallbackURL + "&JamCancelURL=" + JamCancelURL
+                            + "&JamFailURL=" + JamFailURL + "&JamAuthToken=" + urlencode(_JamToken) + "&JamPlanID=" + urlencode((string)JamPlanID)
+                            + "&JamRetailerOrderNo=" + urlencode(RetailerOrderNo) + "&JamEmail=" + urlencode(Email) + "&JamDateOfBirth=" + urlencode(DateOfBirth);
 
                         // entry in database
 
