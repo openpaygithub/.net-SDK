@@ -98,12 +98,16 @@ namespace openpaySDKDemo.Controllers
                 string strUrl = System.Web.HttpContext.Current.Request.Url.AbsoluteUri.Replace(strPathAndQuery, "/");
 
           
-                string _ServiceBaseURL = WebConfigurationManager.AppSettings["_ServiceBaseURL" + IsLive()];
+                string _ServiceBaseURL = WebConfigurationManager.AppSettings["_ServiceBaseURL" + IsLive() + IsUK()];
                 string _Call1_NewOnlineOrder = WebConfigurationManager.AppSettings["_Call1_NewOnlineOrder"];
                 // - assign request XML here 
-                string _JamToken = WebConfigurationManager.AppSettings["_JamToken"];
-                string _AuthToken = WebConfigurationManager.AppSettings["_AuthToken"];
-               string inputXML = "<NewOnlineOrder>"
+                string _JamToken = WebConfigurationManager.AppSettings["_JamToken" + IsUK()];
+                string _AuthToken = WebConfigurationManager.AppSettings["_AuthToken" + IsUK()];
+                
+               string inputXML = "";
+                if (IsUK() == "UK")
+                {
+                    inputXML = "<NewOnlineOrder>"
                                 + "<JamAuthToken>" + _JamToken + "</JamAuthToken>"
                                 + "<AuthToken>" + _AuthToken + "</AuthToken>"
                                 + "<PurchasePrice>" + _totalprice + ".00</PurchasePrice>"
@@ -116,27 +120,35 @@ namespace openpaySDKDemo.Controllers
                                 + "<FamilyName>" + _modelCO.LastName + "</FamilyName>"
                                 + "<Email>" + _modelCO.Email + "</Email>"
                                 + "<DateOfBirth>" + _modelCO.DOB + "</DateOfBirth>"
-                                + "<Gender></Gender>"
-                                + "<PhoneNumber></PhoneNumber>"
+                                + "<Gender>M</Gender>"
+                                + "<PhoneNumber>611111111</PhoneNumber>"
                                 + "<ResAddress1>" + _modelCO.Address + "</ResAddress1>"
                                 + "<ResAddress2></ResAddress2>"
                                 + "<ResSuburb>" + _modelCO.Subrub + "</ResSuburb>"
                                 + "<ResState>" + _modelCO.State + "</ResState>"
                                 + "<ResPostCode>" + _modelCO.PostCode + "</ResPostCode>"
-                                + "<DeliveryDate>" + DateTime.Now.ToString("dd mmm yyyy") + "</DeliveryDate>"
-                                + "<DelAddress1 >" + _modelCO.Address + "</DelAddress1>"
+                                + "<DeliveryDate>" + DateTime.Now.ToString("dd MMM yyyy") + "</DeliveryDate>"
+                                + "<DelAddress1>" + _modelCO.Address + "</DelAddress1>"
                                 + "<DelAddress2></DelAddress2>"
                                 + "<DelSuburb>" + _modelCO.Subrub + "</DelSuburb>"
                                 + "<DelState>" + _modelCO.State + "</DelState>"
                                 + "<DelPostCode>" + _modelCO.PostCode + "</DelPostCode>"
                                 + "</NewOnlineOrder>"; // - request
+                }
+                else
+                {
+                    inputXML = "<NewOnlineOrder>"
+                                + "<JamAuthToken>" + _JamToken + "</JamAuthToken>"
+                                + "<AuthToken>" + _AuthToken + "</AuthToken>"
+                                + "<PurchasePrice>" + _totalprice + ".00</PurchasePrice>"
+                                + "<PlanCreationType>Pending</PlanCreationType>"                                
+                                + "</NewOnlineOrder>"; // - request
+                }                
 
                 try
                 {
                     string URL = _ServiceBaseURL + _Call1_NewOnlineOrder;
-                    string innerXML = openpay_POST(URL, inputXML);
-
-                   
+                    string innerXML = openpay_POST(URL, inputXML);                    
 
                     XmlSerializer serializer = new XmlSerializer(typeof(ModelopenpayAPI.ResponseNewOnlineOrder));
                     StringReader rdr = new StringReader(innerXML);
@@ -148,7 +160,7 @@ namespace openpaySDKDemo.Controllers
                         string JamCallbackURL = strUrl + "openpay/CallBack";//Not more than 250 characters
                         string JamCancelURL = strUrl + "openpay/CallBack";//Not more than 250 characters
                         string JamFailURL = strUrl + "openpay/CallBack";//Not more than 250 characters
-                        string form_url = WebConfigurationManager.AppSettings["_GateWayURL" + IsLive()];
+                        string form_url = WebConfigurationManager.AppSettings["_GateWayURL" + IsLive() + IsUK()];
                         string RetailerOrderNo = _orderID;//Consumer site order number
                         string Email = _modelCO.Email;//Not more than 150 characters
                         string FirstName = _modelCO.FirstName;//First name(Not more than 50 characters)
@@ -168,9 +180,30 @@ namespace openpaySDKDemo.Controllers
                         string DeliveryDate = DateTime.Now.ToString("dd mmm yyyy");//dd mmm yyyy                                              
                         string JamPlanID = resultingMessage.PlanID;  //Plan ID
 
-                        string pagegurl = form_url + "?JamCallbackURL=" + JamCallbackURL + "&JamCancelURL=" + JamCancelURL
-                            + "&JamFailURL=" + JamFailURL + "&JamAuthToken=" + urlencode(_JamToken) + "&JamPlanID=" + urlencode((string)JamPlanID)
-                            + "&JamRetailerOrderNo=" + urlencode(RetailerOrderNo) + "&JamEmail=" + urlencode(Email) + "&JamDateOfBirth=" + urlencode(DateOfBirth);
+                        string pagegurl = "";
+                        if (IsUK() == "UK")
+                        {                                                       
+                            //pagegurl = form_url + "?JamCallbackURL=" + JamCallbackURL + "&JamCancelURL=" + JamCancelURL
+                            //    + "&JamFailURL=" + JamFailURL + "&JamAuthToken=" + urlencode(_JamToken) + "&JamPlanID=" + urlencode((string)JamPlanID)
+                            //    + "&JamRetailerOrderNo=" + urlencode(RetailerOrderNo) + "&JamEmail=" + urlencode(Email) + "&JamDateOfBirth=" + urlencode(DateOfBirth);
+
+                            pagegurl = form_url + "?JamCallbackURL=" + JamCallbackURL + "&JamCancelURL=" + JamCancelURL
+                               + "&JamFailURL=" + JamFailURL + "&JamAuthToken=" + urlencode(_JamToken) + "&JamPlanID=" + urlencode((string)JamPlanID)
+                               + "&JamRetailerOrderNo=" + urlencode(RetailerOrderNo);
+                        }
+                        else
+                        {                          
+                            pagegurl = form_url + "?JamCallbackURL=" + JamCallbackURL + "&JamCancelURL=" + JamCancelURL
+                                + "&JamFailURL=" + JamFailURL + "&JamAuthToken=" + urlencode(_JamToken) + "&JamPlanID=" + urlencode((string)JamPlanID)
+                                + "&JamRetailerOrderNo=" + urlencode(RetailerOrderNo) + "&JamPrice=" + urlencode(PurchasePrice) + "&JamEmail="
+                                + urlencode(Email) + "&JamFirstName=" + urlencode(FirstName) + "&JamOtherNames=" + urlencode(OtherNames)
+                                + "&JamFamilyName=" + urlencode(FamilyName) + "&JamDateOfBirth=" + urlencode(DateOfBirth) + "&JamResAddress1="
+                                + urlencode(ResAddress1) + "&JamResAddress2=" + urlencode(ResAddress2) + "&JamResSubrub=" + urlencode(ResSubrub)
+                                + "&JamResState=" + urlencode(ResState) + "&JamResPostCode=" + urlencode(ResPostCode) + "&JamDelAddress1="
+                                + urlencode(DelAddress1) + "&JamDelAddress2=" + urlencode(DelAddress2) + "&JamDelSubrub=" + urlencode(DelSubrub)
+                                + "&JamDelState=" + urlencode(DelState) + "&JamDelPostCode=" + urlencode(DelPostCode) + "&JamDeliveryDate="
+                                + urlencode(DeliveryDate);                            
+                        }      
 
                         // entry in database
 
@@ -228,11 +261,11 @@ namespace openpaySDKDemo.Controllers
                     FullRefund = true;
                 }
                 // - service base url and method name
-                string _ServiceBaseURL = WebConfigurationManager.AppSettings["_ServiceBaseURL" + IsLive()];
+                string _ServiceBaseURL = WebConfigurationManager.AppSettings["_ServiceBaseURL" + IsLive() + IsUK()];
                 string _Call4_OnlineOrderReduction = WebConfigurationManager.AppSettings["_Call4_OnlineOrderReduction"];
                 // - assign request XML here 
-                string _JamToken = WebConfigurationManager.AppSettings["_JamToken"];
-                string _AuthToken = WebConfigurationManager.AppSettings["_AuthToken"];
+                string _JamToken = WebConfigurationManager.AppSettings["_JamToken" + IsUK()];
+                string _AuthToken = WebConfigurationManager.AppSettings["_AuthToken" + IsUK()];
                 string inputXML = "<OnlineOrderReduction>"
                                 + "<JamAuthToken>" + _JamToken + "</JamAuthToken>"
                                 + "<AuthToken>" + _AuthToken + "</AuthToken>"
@@ -285,11 +318,11 @@ namespace openpaySDKDemo.Controllers
             string _statusDatabase = "";
                 
                 // - service base url and method name
-                string _ServiceBaseURL = WebConfigurationManager.AppSettings["_ServiceBaseURL" + IsLive()];
+                string _ServiceBaseURL = WebConfigurationManager.AppSettings["_ServiceBaseURL" + IsLive() + IsUK()];
                 string _Call5_OnlineOrderDispatchPlan = WebConfigurationManager.AppSettings["_Call5_OnlineOrderDispatchPlan"];
                 // - assign request XML here 
-                string _JamToken = WebConfigurationManager.AppSettings["_JamToken"];
-                string _AuthToken = WebConfigurationManager.AppSettings["_AuthToken"];
+                string _JamToken = WebConfigurationManager.AppSettings["_JamToken" + IsUK()];
+                string _AuthToken = WebConfigurationManager.AppSettings["_AuthToken" + IsUK()];
                 string inputXML = "<OnlineOrderDispatchPlan>"
                                 + "<JamAuthToken>" + _JamToken + "</JamAuthToken>"
                                 + "<AuthToken>" + _AuthToken + "</AuthToken>"
@@ -336,11 +369,11 @@ namespace openpaySDKDemo.Controllers
             string _statusDatabase = "";
                
                 // - service base url and method name
-                string _ServiceBaseURL = WebConfigurationManager.AppSettings["_ServiceBaseURL" + IsLive()];
+                string _ServiceBaseURL = WebConfigurationManager.AppSettings["_ServiceBaseURL" + IsLive() + IsUK()];
                 string _FraudAnalysis_OnlineOrderFraudAlert = WebConfigurationManager.AppSettings["_FraudAnalysis_OnlineOrderFraudAlert"];
                 // - assign request XML here 
-                string _JamToken = WebConfigurationManager.AppSettings["_JamToken"];
-                string _AuthToken = WebConfigurationManager.AppSettings["_AuthToken"];              
+                string _JamToken = WebConfigurationManager.AppSettings["_JamToken" + IsUK()];
+                string _AuthToken = WebConfigurationManager.AppSettings["_AuthToken" + IsUK()];              
 
                 string inputXML = "<OnlineOrderFraudAlert>"
                             + "<JamAuthToken>" + _JamToken + "</JamAuthToken>"
@@ -386,7 +419,16 @@ namespace openpaySDKDemo.Controllers
                 isLive = "Live";
             }
             return isLive;
-        }       
+        }
+        public string IsUK()
+        {
+            string isLive = "";
+            if (WebConfigurationManager.AppSettings["_Location"].ToString().ToUpper() == "UK")
+            {
+                isLive = "UK";
+            }
+            return isLive;
+        }
         [Authorize]
         public ActionResult CallBack(string status, string planid, string orderid)
         {           
@@ -397,11 +439,11 @@ namespace openpaySDKDemo.Controllers
                 ViewBag.CalBackMsg = "Successfully purchased products!";
 
                 // - service base url and method name
-                string _ServiceBaseURL = WebConfigurationManager.AppSettings["_ServiceBaseURL" + IsLive()];
+                string _ServiceBaseURL = WebConfigurationManager.AppSettings["_ServiceBaseURL" + IsLive() + IsUK()];
                 string _Call3_OnlineOrderCapturePayment = WebConfigurationManager.AppSettings["_Call3_OnlineOrderCapturePayment"];
                 // - assign request XML here 
-                string _JamToken = WebConfigurationManager.AppSettings["_JamToken"];
-                string _AuthToken = WebConfigurationManager.AppSettings["_AuthToken"];
+                string _JamToken = WebConfigurationManager.AppSettings["_JamToken" + IsUK()];
+                string _AuthToken = WebConfigurationManager.AppSettings["_AuthToken" + IsUK()];
                 string inputXML = "<OnlineOrderCapturePayment>"
                                 + "<JamAuthToken>" + _JamToken + "</JamAuthToken>"
                                 + "<AuthToken>" + _AuthToken + "</AuthToken>"
