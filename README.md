@@ -108,7 +108,45 @@ The objective of this system is to provide a solution to make payment of the Bil
             }
             return _sReq;
         }</pre>
+        
+        
+### The function which is called to get response from API in SDK
+<pre>public string openpayPOST(string URL, string inputXML)
+        {
+            string innerXML = "";
+            try
+            {
+                HttpWebRequest http = WebRequest.Create(URL) as HttpWebRequest;
+                http.Timeout = 40000;
+                ServicePointManager.Expect100Continue = true;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)3072;
+                ServicePointManager.ServerCertificateValidationCallback += new RemoteCertificateValidationCallback(_AlwaysGoodCertificate);
 
+                http.AllowAutoRedirect = true;
+                http.Method = "POST";
+                http.ContentType = "application/xml; charset=utf-8";
+                http.UserAgent = "WWW-Mechanize/1.73";
+                byte[] dataBytes = System.Text.UTF8Encoding.UTF8.GetBytes(inputXML);
+                http.ContentLength = dataBytes.Length;
+                HttpWebResponse resp;
+                using (Stream postStream = http.GetRequestStream())
+                {
+                    postStream.Write(dataBytes, 0, dataBytes.Length);
+                }
+                resp = (HttpWebResponse)http.GetResponse();
+                WebResponse getRes = http.GetResponse();
+
+                using (StreamReader sr = new StreamReader(getRes.GetResponseStream()))
+                {
+                    innerXML = sr.ReadToEnd().Replace(" xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\"", "");
+                }
+                return innerXML;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message.ToString();
+            }
+        }</pre>
 ### Now you have to run the Call-1 method through “NEW ONLINE ORDER” API Which is -
 <pre>openpayMethods _openpayMethods = new openpayMethods();
                 openpayModels.Request_Call _req_call = RequestVal();
@@ -382,117 +420,256 @@ The objective of this system is to provide a solution to make payment of the Bil
         }</pre>
         
 ### For Min-Max Calculation we can use the below code
-string _MinMax_OnlineOrderDispatchPlan = WebConfigurationManager.AppSettings["_MinMax_OnlineOrderDispatchPlan"];
-                        inputXML = "`<MinMaxPurchasePrice>`"
-                                + "`<JamAuthToken>`" + _JamToken + "`</JamAuthToken>`"
-                                + "`<AuthToken>`" + _AuthToken + "`</AuthToken>`"
-                                + "`</MinMaxPurchasePrice>`"; // - request
+<pre>string _MinMax_MinMaxPurchasePrice = "MinMaxPurchasePrice";
+                    inputXML = "<MinMaxPurchasePrice>"
+                            + "<JamAuthToken>" + _request.Settings.JamToken + "</JamAuthToken>"
+                            + "<AuthToken>" + _request.Settings.AuthToken + "</AuthToken>"
+                            + "</MinMaxPurchasePrice>"; // - request
 
-                        URL = _ServiceBaseURL + _MinMax_OnlineOrderDispatchPlan;
+                    URL = _ServiceBaseURL + _MinMax_MinMaxPurchasePrice;
+                    innerXML = openpayPOST(URL, inputXML);</pre>
 
-                        HttpWebRequest http = WebRequest.Create(URL) as HttpWebRequest;
-                                                // - service base url and method name
-
-            http.Timeout = 40000;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls;
-
-            http.AllowAutoRedirect = true;
-            http.Method = "POST";
-            http.ContentType = "application/xml; charset=utf-8";
-            http.UserAgent = "WWW-Mechanize/1.73";
-            byte[] dataBytes = System.Text.UTF8Encoding.UTF8.GetBytes(inputXML);
-            http.ContentLength = dataBytes.Length;
-            HttpWebResponse resp;
-            using (Stream postStream = http.GetRequestStream())
+### For Capture Payment
+<pre>openpayMethods _openpayMethods = new openpayMethods();
+                openpayModels.Request_Call _req_call = RequestVal();
+                openpayModels.RequestOnlineOrderCapturePayment _RequestOnlineOrderCapturePayment = new openpayModels.RequestOnlineOrderCapturePayment();
+                _RequestOnlineOrderCapturePayment.PlanID = planid;
+                _req_call.OnlineOrderCapturePayment = _RequestOnlineOrderCapturePayment; 
+                
+ openpayModels.Response_Call _res_call = _openpayMethods.openpayOnlineOrderCapturePayment(_req_call);
+               </pre>
+<pre>public openpayModels.Response_Call openpayOnlineOrderCapturePayment(openpayModels.Request_Call _request)
+        {
+            openpayModels.Response_Call _response = new openpayModels.Response_Call();
+            try
             {
-                postStream.Write(dataBytes, 0, dataBytes.Length);
-            }
-            resp = (HttpWebResponse)http.GetResponse();
-            WebResponse getRes = http.GetResponse();
-            using (StreamReader sr = new StreamReader(getRes.GetResponseStream()))
-            {
-                string innerXML = sr.ReadToEnd;
-            }
+                openpayModels.Static_Request _staticRequest = StaticRequestVal(_request.Settings.Location.Code.ToUpper().Trim(), _request.Settings.URL.IsLiveURL);
 
-
-### For Refund Process 
-string _ServiceBaseURL = WebConfigurationManager.AppSettings["_ServiceBaseURL"];
-                string _Call4_OnlineOrderReduction = WebConfigurationManager.AppSettings["_Call4_OnlineOrderReduction"];
+                // - service base url and method name
+                string _ServiceBaseURL = _staticRequest.ServiceBaseURL;
+                string _Call3_OnlineOrderCapturePayment = "OnlineOrderCapturePayment";
                 // - assign request XML here 
-                string _JamToken = WebConfigurationManager.AppSettings["_JamToken"];
-                string _AuthToken = WebConfigurationManager.AppSettings["_AuthToken"];
-                string inputXML = "`<OnlineOrderReduction>`"
-                                + "`<JamAuthToken>`" + _JamToken + "`</JamAuthToken>`"
-                                + "`<AuthToken>`" + _AuthToken + "`</AuthToken>`"
-                                + "`<PlanID>`" + dt.Rows[0]["PlanId"].ToString() + "`</PlanID>`"
-                                + "`<NewPurchasePrice>`" + NewPurchasePrice.ToString() + "`</NewPurchasePrice>`"
-                                + "`<ReducePriceBy>`" + ReducePriceBy.ToString() + "`</ReducePriceBy>`"
-                                + "`<FullRefund>`" + FullRefund.ToString() + "`</FullRefund>`"
-                                + "`</OnlineOrderReduction>`"; // - request
+                string _JamToken = _request.Settings.JamToken;
+                string _AuthToken = _request.Settings.AuthToken;
+                
+                // - assign request XML here 
+                string inputXML = "<OnlineOrderCapturePayment>"
+                                + "<JamAuthToken>" + _JamToken + "</JamAuthToken>"
+                                + "<AuthToken>" + _AuthToken + "</AuthToken>"
+                                + "<PlanID>" + _request.OnlineOrderCapturePayment.PlanID + "</PlanID>"
+                                + "</OnlineOrderCapturePayment>"; // - request
 
-                    string URL = _ServiceBaseURL + _Call4_OnlineOrderReduction;
-            
-            HttpWebRequest http = WebRequest.Create(URL) as HttpWebRequest;
-                                                // - service base url and method name
+                string URL = _ServiceBaseURL + _Call3_OnlineOrderCapturePayment;
+                string innerXML = openpayPOST(URL, inputXML);
 
-            http.Timeout = 40000;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls;
+                XmlSerializer serializer = new XmlSerializer(typeof(openpayModels.ResponseOnlineOrderCapturePayment));
+                StringReader rdr = new StringReader(innerXML);
+                openpayModels.ResponseOnlineOrderCapturePayment resultingMessage = (openpayModels.ResponseOnlineOrderCapturePayment)serializer.Deserialize(rdr);
 
-            http.AllowAutoRedirect = true;
-            http.Method = "POST";
-            http.ContentType = "application/xml; charset=utf-8";
-            http.UserAgent = "WWW-Mechanize/1.73";
-            byte[] dataBytes = System.Text.UTF8Encoding.UTF8.GetBytes(inputXML);
-            http.ContentLength = dataBytes.Length;
-            HttpWebResponse resp;
-            using (Stream postStream = http.GetRequestStream())
-            {
-                postStream.Write(dataBytes, 0, dataBytes.Length);
+                _response.OnlineOrderCapturePayment = resultingMessage;
             }
-            resp = (HttpWebResponse)http.GetResponse();
-            WebResponse getRes = http.GetResponse();
-            using (StreamReader sr = new StreamReader(getRes.GetResponseStream()))
+            catch (Exception ex)
             {
-                string innerXML = sr.ReadToEnd;
+                openpayModels.Error _res_error = new openpayModels.Error();
+                _res_error.reason = ex.Message.ToString();
+                _response.Error = _res_error;
+                // - exception handling code should go here }
             }
+            return _response;
+        }</pre>
+### For Refund Process 
+<pre>
+                openpayMethods _openpayMethods = new openpayMethods();
+                openpayModels.Request_Call _req_call = RequestVal();
+                openpayModels.RequestOnlineOrderReduction _RequestOnlineOrderReduction = new openpayModels.RequestOnlineOrderReduction();
+                _RequestOnlineOrderReduction.PlanID = dt.Rows[0]["PlanId"].ToString();
+                _RequestOnlineOrderReduction.NewPurchasePrice = NewPurchasePrice;
+                _RequestOnlineOrderReduction.ReducePriceBy = ReducePriceBy;
+                _RequestOnlineOrderReduction.FullRefund = FullRefund;
+                _req_call.OnlineOrderReduction = _RequestOnlineOrderReduction;</pre>
+                <pre>public openpayModels.Response_Call openpayOnlineOrderReduction(openpayModels.Request_Call _request)
+        {
+            openpayModels.Response_Call _response = new openpayModels.Response_Call();
+            try
+            {
+                openpayModels.Static_Request _staticRequest = StaticRequestVal(_request.Settings.Location.Code.ToUpper().Trim(), _request.Settings.URL.IsLiveURL);
+
+                // - service base url and method name
+                string _ServiceBaseURL = _staticRequest.ServiceBaseURL;
+                string _Call4_OnlineOrderCapturePayment = "OnlineOrderReduction";
+                // - assign request XML here 
+                string _JamToken = _request.Settings.JamToken;
+                string _AuthToken = _request.Settings.AuthToken;
+
+                // - assign request XML here 
+                string inputXML = "<OnlineOrderReduction>"
+                                + "<JamAuthToken>" + _JamToken + "</JamAuthToken>"
+                                + "<AuthToken>" + _AuthToken + "</AuthToken>"
+                                + "<PlanID>" + _request.OnlineOrderReduction.PlanID + "</PlanID>"
+                                + "<NewPurchasePrice>" + _request.OnlineOrderReduction.NewPurchasePrice + "</NewPurchasePrice>"
+                                + "<ReducePriceBy>" + _request.OnlineOrderReduction.ReducePriceBy + "</ReducePriceBy>"
+                                + "<FullRefund>" + _request.OnlineOrderReduction.FullRefund + "</FullRefund>"
+                                + "</OnlineOrderReduction>"; // - request
+
+                string URL = _ServiceBaseURL + _Call4_OnlineOrderCapturePayment;
+                string innerXML = openpayPOST(URL, inputXML);
+
+                XmlSerializer serializer = new XmlSerializer(typeof(openpayModels.ResponseOnlineOrderReduction));
+                StringReader rdr = new StringReader(innerXML);
+                openpayModels.ResponseOnlineOrderReduction resultingMessage = (openpayModels.ResponseOnlineOrderReduction)serializer.Deserialize(rdr);
+
+                _response.OnlineOrderReduction = resultingMessage;
+            }
+            catch (Exception ex)
+            {
+                openpayModels.Error _res_error = new openpayModels.Error();
+                _res_error.reason = ex.Message.ToString();
+                _response.Error = _res_error;
+                // - exception handling code should go here }
+            }
+            return _response;
+        }</pre>
 
 ### For Plan Dispatch
+<pre>openpayMethods _openpayMethods = new openpayMethods();
+                openpayModels.Request_Call _req_call = RequestVal();
+                openpayModels.RequestOnlineOrderDispatchPlan _RequestOnlineOrderDispatchPlan = new openpayModels.RequestOnlineOrderDispatchPlan();
+                _RequestOnlineOrderDispatchPlan.PlanID = dt.Rows[0]["PlanId"].ToString();
+                _req_call.OnlineOrderDispatchPlan = _RequestOnlineOrderDispatchPlan;
 
-                string _ServiceBaseURL = WebConfigurationManager.AppSettings["_ServiceBaseURL"];
-                string _Call5_OnlineOrderDispatchPlan = WebConfigurationManager.AppSettings["_Call5_OnlineOrderDispatchPlan"];
+                openpayModels.Response_Call _res_call = _openpayMethods.openpayOnlineOrderDispatchPlan(_req_call);</pre>
+<pre>public openpayModels.Response_Call openpayOnlineOrderDispatchPlan(openpayModels.Request_Call _request)
+        {
+            openpayModels.Response_Call _response = new openpayModels.Response_Call();
+            try
+            {
+                openpayModels.Static_Request _staticRequest = StaticRequestVal(_request.Settings.Location.Code.ToUpper().Trim(), _request.Settings.URL.IsLiveURL);
+
+                // - service base url and method name
+                string _ServiceBaseURL = _staticRequest.ServiceBaseURL;
+                string _Call5_OnlineOrderDispatchPlan = "OnlineOrderDispatchPlan";
                 // - assign request XML here 
-                string _JamToken = WebConfigurationManager.AppSettings["_JamToken"];
-                string _AuthToken = WebConfigurationManager.AppSettings["_AuthToken"];
-                string inputXML = "`<OnlineOrderDispatchPlan>`"
-                                + "`<JamAuthToken>`" + _JamToken + "`</JamAuthToken>`"
-                                + "`<AuthToken>`" + _AuthToken + "`</AuthToken>`"
-                                + "`<PlanID>`" + dt.Rows[0]["PlanId"].ToString() + "`</PlanID>`"
-                                + "`</OnlineOrderDispatchPlan>`"; // - request
+                string _JamToken = _request.Settings.JamToken;
+                string _AuthToken = _request.Settings.AuthToken;
 
+                // - assign request XML here 
+                string inputXML = "<OnlineOrderDispatchPlan>"
+                                 + "<JamAuthToken>" + _JamToken + "</JamAuthToken>"
+                                 + "<AuthToken>" + _AuthToken + "</AuthToken>"
+                                 + "<PlanID>" + _request.OnlineOrderDispatchPlan.PlanID + "</PlanID>"
+                                 + "</OnlineOrderDispatchPlan>"; // - request
 
+                string URL = _ServiceBaseURL + _Call5_OnlineOrderDispatchPlan;
+                string innerXML = openpayPOST(URL, inputXML);
 
-            string URL = _ServiceBaseURL + _Call5_OnlineOrderDispatchPlan;
-            HttpWebRequest http = WebRequest.Create(URL) as HttpWebRequest;
-                                                // - service base url and method name
+                XmlSerializer serializer = new XmlSerializer(typeof(openpayModels.ResponseOnlineOrderDispatchPlan));
+                StringReader rdr = new StringReader(innerXML);
+                openpayModels.ResponseOnlineOrderDispatchPlan resultingMessage = (openpayModels.ResponseOnlineOrderDispatchPlan)serializer.Deserialize(rdr);
 
-            http.Timeout = 40000;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls;
-
-            http.AllowAutoRedirect = true;
-            http.Method = "POST";
-            http.ContentType = "application/xml; charset=utf-8";
-            http.UserAgent = "WWW-Mechanize/1.73";
-            byte[] dataBytes = System.Text.UTF8Encoding.UTF8.GetBytes(inputXML);
-            http.ContentLength = dataBytes.Length;
-            HttpWebResponse resp;
-            using (Stream postStream = http.GetRequestStream())
-            {
-                postStream.Write(dataBytes, 0, dataBytes.Length);
+                _response.OnlineOrderDispatchPlan = resultingMessage;
             }
-            resp = (HttpWebResponse)http.GetResponse();
-            WebResponse getRes = http.GetResponse();
-            using (StreamReader sr = new StreamReader(getRes.GetResponseStream()))
+            catch (Exception ex)
             {
-                string innerXML = sr.ReadToEnd;
+                openpayModels.Error _res_error = new openpayModels.Error();
+                _res_error.reason = ex.Message.ToString();
+                _response.Error = _res_error;
+                // - exception handling code should go here }
             }
-                    
+            return _response;
+        }</pre>                  
+### For Fraud Alert
+<pre>openpayMethods _openpayMethods = new openpayMethods();
+                openpayModels.Request_Call _req_call = RequestVal();
+                openpayModels.RequestOnlineOrderFraudAlert _RequestOnlineOrderFraudAlert = new openpayModels.RequestOnlineOrderFraudAlert();
+                _RequestOnlineOrderFraudAlert.PlanID = dt.Rows[0]["PlanId"].ToString();
+                _RequestOnlineOrderFraudAlert.Details = FAValue;
+                _req_call.OnlineOrderFraudAlert = _RequestOnlineOrderFraudAlert;
+                 openpayModels.Response_Call _res_call = _openpayMethods.openpayOnlineOrderFraudAlert(_req_call);</pre>
+<pre>public openpayModels.Response_Call openpayOnlineOrderFraudAlert(openpayModels.Request_Call _request)
+        {
+            openpayModels.Response_Call _response = new openpayModels.Response_Call();
+            try
+            {
+                openpayModels.Static_Request _staticRequest = StaticRequestVal(_request.Settings.Location.Code.ToUpper().Trim(), _request.Settings.URL.IsLiveURL);
+
+                // - service base url and method name
+                string _ServiceBaseURL = _staticRequest.ServiceBaseURL;
+                string _FraudAnalysis_OnlineOrderFraudAlert = "OnlineOrderFraudAlert";
+                // - assign request XML here 
+                string _JamToken = _request.Settings.JamToken;
+                string _AuthToken = _request.Settings.AuthToken;
+
+                // - assign request XML here 
+                string inputXML = "<OnlineOrderFraudAlert>"
+                             + "<JamAuthToken>" + _JamToken + "</JamAuthToken>"
+                             + "<AuthToken>" + _AuthToken + "</AuthToken>"
+                             + "<PlanID>" + _request.OnlineOrderFraudAlert.PlanID + "</PlanID>"
+                             + "<Details>" + _request.OnlineOrderFraudAlert.Details + "</Details>"
+                             + "</OnlineOrderFraudAlert>"; // - request         
+
+                string URL = _ServiceBaseURL + _FraudAnalysis_OnlineOrderFraudAlert;
+                string innerXML = openpayPOST(URL, inputXML);
+
+                XmlSerializer serializer = new XmlSerializer(typeof(openpayModels.ResponseOnlineOrderFraudAlert));
+                StringReader rdr = new StringReader(innerXML);
+                openpayModels.ResponseOnlineOrderFraudAlert resultingMessage = (openpayModels.ResponseOnlineOrderFraudAlert)serializer.Deserialize(rdr);
+
+                _response.OnlineOrderFraudAlert = resultingMessage;
+            }
+            catch (Exception ex)
+            {
+                openpayModels.Error _res_error = new openpayModels.Error();
+                _res_error.reason = ex.Message.ToString();
+                _response.Error = _res_error;
+                // - exception handling code should go here }
+            }
+            return _response;
+        }</pre>
+
+### For Order Status
+<pre>openpayMethods _openpayMethods = new openpayMethods();
+                openpayModels.Request_Call _req_call = RequestVal();
+                openpayModels.RequestOnlineOrderStatus _RequestOnlineOrderStatus = new openpayModels.RequestOnlineOrderStatus();
+                _RequestOnlineOrderStatus.PlanID = dt.Rows[0]["PlanId"].ToString();
+                _req_call.OnlineOrderStatus = _RequestOnlineOrderStatus;
+
+                openpayModels.Response_Call _res_call = _openpayMethods.openpayOnlineOrderStatus(_req_call);</pre>
+<pre>public openpayModels.Response_Call openpayOnlineOrderStatus(openpayModels.Request_Call _request)
+        {
+            openpayModels.Response_Call _response = new openpayModels.Response_Call();
+            try
+            {
+                openpayModels.Static_Request _staticRequest = StaticRequestVal(_request.Settings.Location.Code.ToUpper().Trim(), _request.Settings.URL.IsLiveURL);
+
+                // - service base url and method name
+                string _ServiceBaseURL = _staticRequest.ServiceBaseURL;
+                string _Check_OnlineOrderStatus = "OnlineOrderStatus";
+                // - assign request XML here 
+                string _JamToken = _request.Settings.JamToken;
+                string _AuthToken = _request.Settings.AuthToken;
+
+                // - assign request XML here 
+                string inputXML = "<OnlineOrderStatus>"
+                             + "<JamAuthToken>" + _JamToken + "</JamAuthToken>"
+                             + "<AuthToken>" + _AuthToken + "</AuthToken>"
+                             + "<PlanID>" + _request.OnlineOrderStatus.PlanID + "</PlanID>"
+                             + "</OnlineOrderStatus>"; // - request         
+
+                string URL = _ServiceBaseURL + _Check_OnlineOrderStatus;
+                string innerXML = openpayPOST(URL, inputXML);
+
+                XmlSerializer serializer = new XmlSerializer(typeof(openpayModels.ResponseOnlineOrderStatus));
+                StringReader rdr = new StringReader(innerXML);
+                openpayModels.ResponseOnlineOrderStatus resultingMessage = (openpayModels.ResponseOnlineOrderStatus)serializer.Deserialize(rdr);
+
+                _response.OnlineOrderStatus = resultingMessage;
+            }
+            catch (Exception ex)
+            {
+                openpayModels.Error _res_error = new openpayModels.Error();
+                _res_error.reason = ex.Message.ToString();
+                _response.Error = _res_error;
+                // - exception handling code should go here }
+            }
+            return _response;
+        }</pre>
