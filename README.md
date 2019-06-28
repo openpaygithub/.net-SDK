@@ -304,30 +304,55 @@ The objective of this system is to provide a solution to make payment of the Bil
                 openpayModels.ResponseNewOnlineOrder resultingMessage = (openpayModels.ResponseNewOnlineOrder)serializer.Deserialize(rdr);
                 _response.NewOnlineOrder = resultingMessage;</pre>
 ### Now we have got the Plan Id and going to ready for payment so we have to run Call-2 Process
-string PurchasePrice = _totalprice + ".00";  
-                                           //Format : 100.00(Not more than $1 million)                        string JamCallbackURL = strUrl + "openpay/CallBack";
-                                           //Not more than 250 characters                        string JamCancelURL = strUrl + "openpay/CallBack";
-                                           //Not more than 250 characters                       string JamFailURL = strUrl + "openpay/CallBack";
-                                           //Not more than 250 characters                        
-string JamRetailerOrderNo = _orderID;
-                                           //Consumer site order number                       string JamEmail = _modelCO.Email;
-                                           //Not more than 150 characters                        string JamFirstName = _modelCO.FirstName;
-                                           //First name(Not more than 50 characters)                        string JamOtherNames = "";
-                                           //Middle name(Not more than 50 characters)                        string JamFamilyName = _modelCO.LastName;
-                                           //Last name(Not more than 50 characters)                        string JamDateOfBirth = _modelCO.DOB;
-                                           //dd mmm yyyy                        
-string JamAddress1 = _modelCO.Address; 
-                                           //Not more than 100 characters                        string JamAddress2 = "";                   
-                                           //Not more than 100 characters                        
-string JamSubrub = _modelCO.Subrub;
-                                           //Not more than 100 characters                        string JamState = _modelCO.State;
-                                           //Not more than 3 characters                        string JamPostCode = _modelCO.PostCode;
-                                           //Not more than 4 characters                        string JamDeliveryDate = DateTime.Now.ToString("dd mmm yyyy");
-                                           //dd mmm yyyy                        
-string JamPlanID = responseXML.PlanID;    
-                                         //Please declare Plan ID   
+<pre>decimal PurchasePrice = _request.NewOnlineOrder.PurchasePrice;//Format : 100.00(Not more than $1 million)
+                    string JamCallbackURL = _request.Settings.URL.CallbackURL;//Not more than 250 characters
+                    string JamCancelURL = _request.Settings.URL.CancelURL;//Not more than 250 characters
+                    string JamFailURL = _request.Settings.URL.FailURL;//Not more than 250 characters
+                    string form_url = _staticRequest.GateWayURL;
+                    string RetailerOrderNo = _request.NewOnlineOrder.RetailerOrderNo;//Consumer site order number
+                    string Email = _request.NewOnlineOrder.Email;//Not more than 150 characters
+                    string FirstName = _request.NewOnlineOrder.FirstName;//First name(Not more than 50 characters)
+                    string OtherNames = _request.NewOnlineOrder.OtherNames;//Middle name(Not more than 50 characters)
+                    string FamilyName = _request.NewOnlineOrder.FamilyName;//Last name(Not more than 50 characters)
+                    string DateOfBirth = _request.NewOnlineOrder.DateOfBirth;//dd mmm yyyy
+                    string ResAddress1 = _request.NewOnlineOrder.ResAddress1;//Not more than 100 characters
+                    string ResAddress2 = _request.NewOnlineOrder.ResAddress2;//Not more than 100 characters
+                    string ResSubrub = _request.NewOnlineOrder.ResSuburb;//Not more than 100 characters
+                    string ResState = _request.NewOnlineOrder.ResState;//Not more than 3 characters
+                    string ResPostCode = _request.NewOnlineOrder.ResPostCode;//Not more than 4 characters
+                    string DelAddress1 = _request.NewOnlineOrder.DelAddress1;//Not more than 100 characters
+                    string DelAddress2 = _request.NewOnlineOrder.DelAddress2;//Not more than 100 characters
+                    string DelSubrub = _request.NewOnlineOrder.ResSuburb;//Not more than 100 characters
+                    string DelState = _request.NewOnlineOrder.DelState;//Not more than 3 characters
+                    string DelPostCode = _request.NewOnlineOrder.DelPostCode;//Not more than 4 characters
+                    string DeliveryDate = _request.NewOnlineOrder.DeliveryDate;//dd mmm yyyy                                              
+                    string JamPlanID = resultingMessage.PlanID;  //Plan ID
 
-string pagegurl = form_url + "?JamCallbackURL=" + JamCallbackURL + "&JamCancelURL=" + JamCancelURL + "&JamFailURL=" + JamFailURL + "&JamAuthToken=" + urlencode(_JamToken) + "&JamPlanID=" + urlencode((string)JamPlanID) + "&JamRetailerOrderNo=" + urlencode(JamRetailerOrderNo) + "&JamPrice=" + urlencode(PurchasePrice) + "&JamEmail=" + urlencode(JamEmail) + "&JamFirstName=" + urlencode(JamFirstName) + "&JamOtherNames=" + urlencode(JamOtherNames) + "&JamFamilyName=" + urlencode(JamFamilyName) + "&JamDateOfBirth=" + urlencode(JamDateOfBirth) + "&JamAddress1=" + urlencode(JamAddress1) + "&JamAddress2=" + urlencode(JamAddress2) + "&JamSubrub=" + urlencode(JamSubrub) + "&JamState=" + urlencode(JamState) + "&JamPostCode=" + urlencode(JamPostCode) + "&JamDeliveryDate=" + urlencode(JamDeliveryDate); // These is callbackURL
+                    string pagegurl = "";
+                    if (_request.Settings.Location.Code.ToUpper().Trim() == "UK")
+                    {
+                        //pagegurl = form_url + "?JamCallbackURL=" + JamCallbackURL + "&JamCancelURL=" + JamCancelURL
+                        //    + "&JamFailURL=" + JamFailURL + "&JamAuthToken=" + _url_Encode(_JamToken) + "&JamPlanID=" + _url_Encode((string)JamPlanID)
+                        //    + "&JamRetailerOrderNo=" + _url_Encode(RetailerOrderNo) + "&JamEmail=" + _url_Encode(Email) + "&JamDateOfBirth=" + _url_Encode(DateOfBirth);
+
+                        pagegurl = form_url + "?JamCallbackURL=" + JamCallbackURL + "&JamCancelURL=" + JamCancelURL
+                            + "&JamFailURL=" + JamFailURL + "&JamAuthToken=" + _url_Encode(_JamToken) + "&JamPlanID=" + _url_Encode((string)JamPlanID)
+                            + "&JamRetailerOrderNo=" + _url_Encode(RetailerOrderNo);
+                    }
+                    else
+                    {
+                        pagegurl = form_url + "?JamCallbackURL=" + JamCallbackURL + "&JamCancelURL=" + JamCancelURL
+                            + "&JamFailURL=" + JamFailURL + "&JamAuthToken=" + _url_Encode(_JamToken) + "&JamPlanID=" + _url_Encode((string)JamPlanID)
+                            + "&JamRetailerOrderNo=" + _url_Encode(RetailerOrderNo) + "&JamPrice=" + PurchasePrice + "&JamEmail="
+                            + _url_Encode(Email) + "&JamFirstName=" + _url_Encode(FirstName) + "&JamOtherNames=" + _url_Encode(OtherNames)
+                            + "&JamFamilyName=" + _url_Encode(FamilyName) + "&JamDateOfBirth=" + _url_Encode(DateOfBirth) + "&JamResAddress1="
+                            + _url_Encode(ResAddress1) + "&JamResAddress2=" + _url_Encode(ResAddress2) + "&JamResSubrub=" + _url_Encode(ResSubrub)
+                            + "&JamResState=" + _url_Encode(ResState) + "&JamResPostCode=" + _url_Encode(ResPostCode) + "&JamDelAddress1="
+                            + _url_Encode(DelAddress1) + "&JamDelAddress2=" + _url_Encode(DelAddress2) + "&JamDelSubrub=" + _url_Encode(DelSubrub)
+                            + "&JamDelState=" + _url_Encode(DelState) + "&JamDelPostCode=" + _url_Encode(DelPostCode) + "&JamDeliveryDate="
+                            + _url_Encode(DeliveryDate);
+                    }
+                    HttpContext.Current.Response.Redirect(pagegurl);</pre>
 
 ### After the process is completed, the Jam system will redirect to the URL “JamCallbackURL” supplied along with a response value for the transaction
  [JamCallbackURL]?status=SUCCESS&planid=3000000022284&orderid=OP0000001
