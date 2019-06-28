@@ -22,7 +22,8 @@ The objective of this system is to provide a solution to make payment of the Bil
      `<add key="_ServiceBaseURL" value="https://retailer.myopenpay.com.au/ServiceTraining/JAMServiceImpl.svc/" />`
 
      `<add key="_ServiceBaseURLLive" value="https://retailer.myopenpay.com.au/ServiceLive/JAMServiceImpl.svc/" />`
-
+* These values are dependent on location if you set UK location then you will have to change these above values and set location wise.
+   
 * These are some method/call name
 
      `<add key="_Call1_NewOnlineOrder" value="NewOnlineOrder" />`
@@ -45,14 +46,31 @@ The objective of this system is to provide a solution to make payment of the Bil
      
        
 ### User Parameters from site
-<pre>string _ServiceBaseURL = WebConfigurationManager.AppSettings["_ServiceBaseURL"];
-                                         //For Live URL please use _ServiceBaseURLLive                        
-string form_url = WebConfigurationManager.AppSettings["_GateWayURL"];
-                                           //For Live URL please use _GateWayURLLive
-string _JamToken = WebConfigurationManager.AppSettings["_JamToken"];
-                                          //JamToken
-string _AuthToken = WebConfigurationManager.AppSettings["_AuthToken"];
-                                          //AuthToken
+<pre> openpayModels.Request_Call _req_call = new openpayModels.Request_Call();
+            openpayModels.Settings _req_Settings = new openpayModels.Settings();
+            if (WebConfigurationManager.AppSettings["_Location"] == "AU")
+            {
+                _req_Settings.JamToken = WebConfigurationManager.AppSettings["_JamTokenAU"];
+                _req_Settings.AuthToken = WebConfigurationManager.AppSettings["_AuthTokenAU"];
+            }
+            else if (WebConfigurationManager.AppSettings["_Location"] == "UK")
+            {
+                _req_Settings.JamToken = WebConfigurationManager.AppSettings["_JamTokenUK"];
+                _req_Settings.AuthToken = WebConfigurationManager.AppSettings["_AuthTokenUK"];
+            }
+            openpayModels.Location _req_Location = new openpayModels.Location();
+            _req_Location.Code = WebConfigurationManager.AppSettings["_Location"];
+
+            openpayModels.URL _req_URL = new openpayModels.URL();
+            _req_URL.IsLiveURL = Convert.ToBoolean(WebConfigurationManager.AppSettings["_LiveURL"]);
+            _req_URL.CallbackURL = "http://localhost:8495/openpay/CallBack";
+            _req_URL.CancelURL = "http://localhost:8495/openpay/CallBack";
+            _req_URL.FailURL = "http://localhost:8495/openpay/CallBack";
+
+            _req_Settings.Location = _req_Location;
+            _req_Settings.URL = _req_URL;
+            _req_call.Settings = _req_Settings;
+            return _req_call;
                                           </pre>
 
 
