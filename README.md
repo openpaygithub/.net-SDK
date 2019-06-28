@@ -5,8 +5,8 @@ The objective of this system is to provide a solution to make payment of the Bil
 
 # There is an instruction how to implement .NET SDK code for openpay application:
 
-### •	To declare some global variable/key for openpay
-* You can declare “JamToken” and “AuthToken” key’s value in `<appSettings>` tag in web.config page or it can be declared globally in .cs page.
+### •	To declare some variable/key for openpay
+
 * * You can declare “JamToken” and “AuthToken” key’s value in `<appSettings>` tag in web.config page or it can be declared globally in .cs page.
      `<add key="_JamToken" value="30000000000000889|155f5b95-a40a-4ae5-8273-41ae83fec8c9" />`
 
