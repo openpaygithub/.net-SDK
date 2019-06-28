@@ -34,10 +34,15 @@ The objective of this system is to provide a solution to make payment of the Bil
      `<add key="_Call5_OnlineOrderDispatchPlan" value="OnlineOrderDispatchPlan" />`
 
      `<add key="_MinMax_OnlineOrderDispatchPlan" value="MinMaxPurchasePrice" />`
+      
+     `<add key="_FraudAnalysis_OnlineOrderFraudAlert" value="OnlineOrderFraudAlert" />`
      
      `<add key="_LiveURL" value="False" />`
-
-
+     
+     `<add key="_Location" value="AU" />`
+     * For UK location you can use(This is up to you).
+     `<add key="_Location" value="UK" />`
+     
        
 ### User Parameters from site
 <pre>string _ServiceBaseURL = WebConfigurationManager.AppSettings["_ServiceBaseURL"];
