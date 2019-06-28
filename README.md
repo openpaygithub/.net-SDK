@@ -110,7 +110,39 @@ The objective of this system is to provide a solution to make payment of the Bil
         }</pre>
 
 ### Now you have to run the Call-1 method through “NEW ONLINE ORDER” API Which is -
+<pre>openpayMethods _openpayMethods = new openpayMethods();
+                openpayModels.Request_Call _req_call = RequestVal();
+                openpayModels.RequestNewOnlineOrder _RequestNewOnlineOrder = new openpayModels.RequestNewOnlineOrder();
 
+                _RequestNewOnlineOrder.PurchasePrice = _totalprice;
+                _RequestNewOnlineOrder.PlanCreationType = "Pending";
+                _RequestNewOnlineOrder.RetailerOrderNo = _orderID;
+                _RequestNewOnlineOrder.ChargeBackCount = 0;
+                _RequestNewOnlineOrder.CustomerQuality = 1;
+
+                _RequestNewOnlineOrder.FirstName = _modelCO.FirstName;
+                _RequestNewOnlineOrder.OtherNames = "";
+                _RequestNewOnlineOrder.FamilyName = _modelCO.LastName;
+                _RequestNewOnlineOrder.Email = _modelCO.Email;
+                _RequestNewOnlineOrder.DateOfBirth = _modelCO.DOB;
+                _RequestNewOnlineOrder.Gender = "M";
+                _RequestNewOnlineOrder.PhoneNumber = "";
+                _RequestNewOnlineOrder.ResAddress1 = _modelCO.Address;
+                _RequestNewOnlineOrder.ResAddress2 = "";
+                _RequestNewOnlineOrder.ResSuburb = _modelCO.Subrub;
+                _RequestNewOnlineOrder.ResState = _modelCO.State;
+                _RequestNewOnlineOrder.ResPostCode = _modelCO.PostCode;
+                _RequestNewOnlineOrder.DeliveryDate = DateTime.Now.ToString("dd MMM yyyy");
+                _RequestNewOnlineOrder.DelAddress1 = _modelCO.Address;
+                _RequestNewOnlineOrder.DelAddress2 = "";
+                _RequestNewOnlineOrder.DelSuburb = _modelCO.Subrub;
+                _RequestNewOnlineOrder.DelState = _modelCO.State;
+                _RequestNewOnlineOrder.DelPostCode = _modelCO.PostCode;
+
+                _req_call.NewOnlineOrder = _RequestNewOnlineOrder;
+
+                openpayModels.Response_Call _res_call = _openpayMethods.openpayNewOnlineOrder(_req_call);</pre>
+                
 <pre>public openpayModels.Response_Call openpayNewOnlineOrder(openpayModels.Request_Call _request)
         {
             openpayModels.Response_Call _response = new openpayModels.Response_Call();
@@ -267,10 +299,10 @@ The objective of this system is to provide a solution to make payment of the Bil
         }</pre>
 
 ### You can use the code to convert string to XML for Call-2 Process
-XmlSerializer serializer = new    XmlSerializer(typeof(Model_openpay.ResponseNewOnlineOrder));
+<pre> XmlSerializer serializer = new XmlSerializer(typeof(openpayModels.ResponseNewOnlineOrder));
                 StringReader rdr = new StringReader(innerXML);
-
-Model_openpay.ResponseNewOnlineOrder responseXML = (Model_openpay.ResponseNewOnlineOrder)serializer.Deserialize(rdr);
+                openpayModels.ResponseNewOnlineOrder resultingMessage = (openpayModels.ResponseNewOnlineOrder)serializer.Deserialize(rdr);
+                _response.NewOnlineOrder = resultingMessage;</pre>
 ### Now we have got the Plan Id and going to ready for payment so we have to run Call-2 Process
 string PurchasePrice = _totalprice + ".00";  
                                            //Format : 100.00(Not more than $1 million)                        string JamCallbackURL = strUrl + "openpay/CallBack";
@@ -303,51 +335,27 @@ string pagegurl = form_url + "?JamCallbackURL=" + JamCallbackURL + "&JamCancelUR
 [JamCallbackURL]?status=FAILURE&planid=3000000022284&orderid= OP0000001
 
 ### Add the Call-3 method “PAYMENT CAPTURE” API is like below through CallBack function
-public CallBack(string status, string planid, string orderid)
-{
+ public ActionResult CallBack(string status, string planid, string orderid)
+        {
             if (status.ToUpper() == "LODGED" || status.ToUpper() == "SUCCESS")
             {
-                
-                string _ServiceBaseURL = WebConfigurationManager.AppSettings["_ServiceBaseURL];
-                string _Call3_OnlineOrderCapturePayment = WebConfigurationManager.AppSettings["_Call3_OnlineOrderCapturePayment"];
-                // - assign request XML here 
-                string _JamToken = WebConfigurationManager.AppSettings["_JamToken"];
-                string _AuthToken = WebConfigurationManager.AppSettings["_AuthToken"];
-                string inputXML = "`<OnlineOrderCapturePayment>`"
-                                + "`<JamAuthToken>`" + _JamToken + "`</JamAuthToken>`"
-                                + "`<AuthToken>`" + _AuthToken + "`</AuthToken>`"
-                                + "`<PlanID>`" + planid + "`</PlanID>`"
-                                + "`</OnlineOrderCapturePayment>`"; // - request
-
-                
-string URL = _ServiceBaseURL + _Call3_OnlineOrderCapturePayment;
-                    HttpWebRequest http = WebRequest.Create(URL) as HttpWebRequest;
-                                                // - service base url and method name
-
-            http.Timeout = 40000;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls;
-
-            http.AllowAutoRedirect = true;
-            http.Method = "POST";
-            http.ContentType = "application/xml; charset=utf-8";
-            http.UserAgent = "WWW-Mechanize/1.73";
-            byte[] dataBytes = System.Text.UTF8Encoding.UTF8.GetBytes(inputXML);
-            http.ContentLength = dataBytes.Length;
-            HttpWebResponse resp;
-            using (Stream postStream = http.GetRequestStream())
-            {
-                postStream.Write(dataBytes, 0, dataBytes.Length);
+                ViewBag.CalBackMsg = "Successfully purchased products!";
+                openpayMethods _openpayMethods = new openpayMethods();
+                openpayModels.Request_Call _req_call = RequestVal();
+                openpayModels.RequestOnlineOrderCapturePayment _RequestOnlineOrderCapturePayment = new openpayModels.RequestOnlineOrderCapturePayment();
+                _RequestOnlineOrderCapturePayment.PlanID = planid;
+                _req_call.OnlineOrderCapturePayment = _RequestOnlineOrderCapturePayment;
             }
-            resp = (HttpWebResponse)http.GetResponse();
-            WebResponse getRes = http.GetResponse();
-
-            using (StreamReader sr = new StreamReader(getRes.GetResponseStream()))
+            else if (status.ToUpper() == "CANCELLED")
             {
-                string innerXML = sr.ReadToEnd;
+              
             }
-}
-
-
+            else if (status.ToUpper() == "FAILURE")
+            {
+               
+            }           
+        }
+        
 ### For Min-Max Calculation we can use the below code
 string _MinMax_OnlineOrderDispatchPlan = WebConfigurationManager.AppSettings["_MinMax_OnlineOrderDispatchPlan"];
                         inputXML = "`<MinMaxPurchasePrice>`"
