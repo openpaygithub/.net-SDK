@@ -77,7 +77,7 @@ The objective of this system is to provide a solution to make payment of the Bil
 
 ### How to set URL Tranning/Live
 
-public openpayModels.Static_Request StaticRequestVal(string _Lcode, bool IsLive)
+<pre>public openpayModels.Static_Request StaticRequestVal(string _Lcode, bool IsLive)
         {
             openpayModels.Static_Request _sReq = new openpayModels.Static_Request();
             if (_Lcode.ToUpper().Trim() == "UK")
@@ -107,7 +107,7 @@ public openpayModels.Static_Request StaticRequestVal(string _Lcode, bool IsLive)
                 }
             }
             return _sReq;
-        }
+        }</pre>
 
 ### Now you have to run the Call-1 method through “NEW ONLINE ORDER” API Which is -
 string inputXML = "`<NewOnlineOrder>`"
