@@ -335,7 +335,7 @@ string pagegurl = form_url + "?JamCallbackURL=" + JamCallbackURL + "&JamCancelUR
 [JamCallbackURL]?status=FAILURE&planid=3000000022284&orderid= OP0000001
 
 ### Add the Call-3 method “PAYMENT CAPTURE” API is like below through CallBack function
- public ActionResult CallBack(string status, string planid, string orderid)
+ <pre>public ActionResult CallBack(string status, string planid, string orderid)
         {
             if (status.ToUpper() == "LODGED" || status.ToUpper() == "SUCCESS")
             {
@@ -354,7 +354,7 @@ string pagegurl = form_url + "?JamCallbackURL=" + JamCallbackURL + "&JamCancelUR
             {
                
             }           
-        }
+        }</pre>
         
 ### For Min-Max Calculation we can use the below code
 string _MinMax_OnlineOrderDispatchPlan = WebConfigurationManager.AppSettings["_MinMax_OnlineOrderDispatchPlan"];
