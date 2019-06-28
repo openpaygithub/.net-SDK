@@ -110,40 +110,161 @@ The objective of this system is to provide a solution to make payment of the Bil
         }</pre>
 
 ### Now you have to run the Call-1 method through “NEW ONLINE ORDER” API Which is -
-string inputXML = "`<NewOnlineOrder>`"
-                  + "`<JamAuthToken>`" + _JamToken + "`</JamAuthToken>`"
-                  + "`<AuthToken>`" + _AuthToken + "`</AuthToken>`"
-                  + "`<PurchasePrice>`" + _totalprice + ".00`</PurchasePrice>`"
-                  + "`<PlanCreationType>`Pending`</PlanCreationType>`"
-                  + "`</NewOnlineOrder>`"; // - request
 
-string _Call1_NewOnlineOrder = WebConfigurationManager.AppSettings["_Call1_NewOnlineOrder"];
-string URL = _ServiceBaseURL + _Call1_NewOnlineOrder;
-HttpWebRequest http = WebRequest.Create(URL) as HttpWebRequest;
-                                                // - service base url and method name
-
-            http.Timeout = 40000;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls;
-
-            http.AllowAutoRedirect = true;
-            http.Method = "POST";
-            http.ContentType = "application/xml; charset=utf-8";
-            http.UserAgent = "WWW-Mechanize/1.73";
-            byte[] dataBytes = System.Text.UTF8Encoding.UTF8.GetBytes(inputXML);
-            http.ContentLength = dataBytes.Length;
-            HttpWebResponse resp;
-            using (Stream postStream = http.GetRequestStream())
+<pre>public openpayModels.Response_Call openpayNewOnlineOrder(openpayModels.Request_Call _request)
+        {
+            openpayModels.Response_Call _response = new openpayModels.Response_Call();
+            try
             {
-                postStream.Write(dataBytes, 0, dataBytes.Length);
-            }
-            resp = (HttpWebResponse)http.GetResponse();
-            WebResponse getRes = http.GetResponse();
-            string innerXML = ""; 
-            using (StreamReader sr = new StreamReader(getRes.GetResponseStream()))
-            {
-                innerXML = sr.ReadToEnd;
-            }
+                openpayModels.Static_Request _staticRequest = StaticRequestVal(_request.Settings.Location.Code.ToUpper().Trim(), _request.Settings.URL.IsLiveURL);
 
+                // - service base url and method name
+                string _ServiceBaseURL = _staticRequest.ServiceBaseURL;
+                string _Call1_NewOnlineOrder = "NewOnlineOrder";
+                // - assign request XML here 
+                string _JamToken = _request.Settings.JamToken;
+                string _AuthToken = _request.Settings.AuthToken;
+
+                string inputXML = "";
+                if (_request.Settings.Location.Code.ToUpper().Trim() == "UK")
+                {
+                    inputXML = "<NewOnlineOrder>"
+                                + "<JamAuthToken>" + _JamToken + "</JamAuthToken>"
+                                + "<AuthToken>" + _AuthToken + "</AuthToken>"
+                                + "<PurchasePrice>" + _request.NewOnlineOrder.PurchasePrice + "</PurchasePrice>"
+                                + "<PlanCreationType>" + _request.NewOnlineOrder.PlanCreationType + "</PlanCreationType>"
+                                + "<RetailerOrderNo>" + _request.NewOnlineOrder.RetailerOrderNo + "</RetailerOrderNo>"
+                                + "<ChargeBackCount>" + _request.NewOnlineOrder.ChargeBackCount + "</ChargeBackCount>"
+                                + "<CustomerQuality>" + _request.NewOnlineOrder.CustomerQuality + "</CustomerQuality>"
+                                + "<FirstName>" + _request.NewOnlineOrder.FirstName + "</FirstName>"
+                                + "<OtherNames>" + _request.NewOnlineOrder.OtherNames + "</OtherNames>"
+                                + "<FamilyName>" + _request.NewOnlineOrder.FamilyName + "</FamilyName>"
+                                + "<Email>" + _request.NewOnlineOrder.Email + "</Email>"
+                                + "<DateOfBirth>" + _request.NewOnlineOrder.DateOfBirth + "</DateOfBirth>"
+                                + "<Gender>" + _request.NewOnlineOrder.Gender + "</Gender>"
+                                + "<PhoneNumber>" + _request.NewOnlineOrder.PhoneNumber + "</PhoneNumber>"
+                                + "<ResAddress1>" + _request.NewOnlineOrder.ResAddress1 + "</ResAddress1>"
+                                + "<ResAddress2>" + _request.NewOnlineOrder.ResAddress2 + "</ResAddress2>"
+                                + "<ResSuburb>" + _request.NewOnlineOrder.ResSuburb + "</ResSuburb>"
+                                + "<ResState>" + _request.NewOnlineOrder.ResState + "</ResState>"
+                                + "<ResPostCode>" + _request.NewOnlineOrder.ResPostCode + "</ResPostCode>"
+                                + "<DeliveryDate>" + _request.NewOnlineOrder.DeliveryDate + "</DeliveryDate>"
+                                + "<DelAddress1>" + _request.NewOnlineOrder.DelAddress1 + "</DelAddress1>"
+                                + "<DelAddress2>" + _request.NewOnlineOrder.DelAddress2 + "</DelAddress2>"
+                                + "<DelSuburb>" + _request.NewOnlineOrder.DelSuburb + "</DelSuburb>"
+                                + "<DelState>" + _request.NewOnlineOrder.DelState + "</DelState>"
+                                + "<DelPostCode>" + _request.NewOnlineOrder.DelPostCode + "</DelPostCode>"
+                                + "</NewOnlineOrder>"; // - request
+                }
+                else if (_request.Settings.Location.Code.ToUpper().Trim() == "AU")
+                {
+                    inputXML = "<NewOnlineOrder>"
+                                + "<JamAuthToken>" + _request.Settings.JamToken + "</JamAuthToken>"
+                                + "<AuthToken>" + _request.Settings.AuthToken + "</AuthToken>"
+                                + "<PurchasePrice>" + _request.NewOnlineOrder.PurchasePrice + "</PurchasePrice>"
+                                + "<PlanCreationType>" + _request.NewOnlineOrder.PlanCreationType + "</PlanCreationType>"
+                                + "</NewOnlineOrder>"; // - request
+                }
+
+                string URL = _ServiceBaseURL + _Call1_NewOnlineOrder;
+                string innerXML = openpayPOST(URL, inputXML);
+
+                XmlSerializer serializer = new XmlSerializer(typeof(openpayModels.ResponseNewOnlineOrder));
+                StringReader rdr = new StringReader(innerXML);
+                openpayModels.ResponseNewOnlineOrder resultingMessage = (openpayModels.ResponseNewOnlineOrder)serializer.Deserialize(rdr);
+                _response.NewOnlineOrder = resultingMessage;
+
+                openpayModels.ProductDetails _productdetails = new openpayModels.ProductDetails();
+                _productdetails.PurchasePrice = _request.NewOnlineOrder.PurchasePrice;
+                _response.ProductDetails = _productdetails;
+
+                if (resultingMessage.PlanID != "" && resultingMessage.reason == "")
+                {
+                    decimal PurchasePrice = _request.NewOnlineOrder.PurchasePrice;//Format : 100.00(Not more than $1 million)
+                    string JamCallbackURL = _request.Settings.URL.CallbackURL;//Not more than 250 characters
+                    string JamCancelURL = _request.Settings.URL.CancelURL;//Not more than 250 characters
+                    string JamFailURL = _request.Settings.URL.FailURL;//Not more than 250 characters
+                    string form_url = _staticRequest.GateWayURL;
+                    string RetailerOrderNo = _request.NewOnlineOrder.RetailerOrderNo;//Consumer site order number
+                    string Email = _request.NewOnlineOrder.Email;//Not more than 150 characters
+                    string FirstName = _request.NewOnlineOrder.FirstName;//First name(Not more than 50 characters)
+                    string OtherNames = _request.NewOnlineOrder.OtherNames;//Middle name(Not more than 50 characters)
+                    string FamilyName = _request.NewOnlineOrder.FamilyName;//Last name(Not more than 50 characters)
+                    string DateOfBirth = _request.NewOnlineOrder.DateOfBirth;//dd mmm yyyy
+                    string ResAddress1 = _request.NewOnlineOrder.ResAddress1;//Not more than 100 characters
+                    string ResAddress2 = _request.NewOnlineOrder.ResAddress2;//Not more than 100 characters
+                    string ResSubrub = _request.NewOnlineOrder.ResSuburb;//Not more than 100 characters
+                    string ResState = _request.NewOnlineOrder.ResState;//Not more than 3 characters
+                    string ResPostCode = _request.NewOnlineOrder.ResPostCode;//Not more than 4 characters
+                    string DelAddress1 = _request.NewOnlineOrder.DelAddress1;//Not more than 100 characters
+                    string DelAddress2 = _request.NewOnlineOrder.DelAddress2;//Not more than 100 characters
+                    string DelSubrub = _request.NewOnlineOrder.ResSuburb;//Not more than 100 characters
+                    string DelState = _request.NewOnlineOrder.DelState;//Not more than 3 characters
+                    string DelPostCode = _request.NewOnlineOrder.DelPostCode;//Not more than 4 characters
+                    string DeliveryDate = _request.NewOnlineOrder.DeliveryDate;//dd mmm yyyy                                              
+                    string JamPlanID = resultingMessage.PlanID;  //Plan ID
+
+                    string pagegurl = "";
+                    if (_request.Settings.Location.Code.ToUpper().Trim() == "UK")
+                    {
+                        //pagegurl = form_url + "?JamCallbackURL=" + JamCallbackURL + "&JamCancelURL=" + JamCancelURL
+                        //    + "&JamFailURL=" + JamFailURL + "&JamAuthToken=" + _url_Encode(_JamToken) + "&JamPlanID=" + _url_Encode((string)JamPlanID)
+                        //    + "&JamRetailerOrderNo=" + _url_Encode(RetailerOrderNo) + "&JamEmail=" + _url_Encode(Email) + "&JamDateOfBirth=" + _url_Encode(DateOfBirth);
+
+                        pagegurl = form_url + "?JamCallbackURL=" + JamCallbackURL + "&JamCancelURL=" + JamCancelURL
+                            + "&JamFailURL=" + JamFailURL + "&JamAuthToken=" + _url_Encode(_JamToken) + "&JamPlanID=" + _url_Encode((string)JamPlanID)
+                            + "&JamRetailerOrderNo=" + _url_Encode(RetailerOrderNo);
+                    }
+                    else
+                    {
+                        pagegurl = form_url + "?JamCallbackURL=" + JamCallbackURL + "&JamCancelURL=" + JamCancelURL
+                            + "&JamFailURL=" + JamFailURL + "&JamAuthToken=" + _url_Encode(_JamToken) + "&JamPlanID=" + _url_Encode((string)JamPlanID)
+                            + "&JamRetailerOrderNo=" + _url_Encode(RetailerOrderNo) + "&JamPrice=" + PurchasePrice + "&JamEmail="
+                            + _url_Encode(Email) + "&JamFirstName=" + _url_Encode(FirstName) + "&JamOtherNames=" + _url_Encode(OtherNames)
+                            + "&JamFamilyName=" + _url_Encode(FamilyName) + "&JamDateOfBirth=" + _url_Encode(DateOfBirth) + "&JamResAddress1="
+                            + _url_Encode(ResAddress1) + "&JamResAddress2=" + _url_Encode(ResAddress2) + "&JamResSubrub=" + _url_Encode(ResSubrub)
+                            + "&JamResState=" + _url_Encode(ResState) + "&JamResPostCode=" + _url_Encode(ResPostCode) + "&JamDelAddress1="
+                            + _url_Encode(DelAddress1) + "&JamDelAddress2=" + _url_Encode(DelAddress2) + "&JamDelSubrub=" + _url_Encode(DelSubrub)
+                            + "&JamDelState=" + _url_Encode(DelState) + "&JamDelPostCode=" + _url_Encode(DelPostCode) + "&JamDeliveryDate="
+                            + _url_Encode(DeliveryDate);
+                    }
+                    HttpContext.Current.Response.Redirect(pagegurl);
+                }
+                if (resultingMessage.reason == "Invalid Purchase Price (less than 0, Not Numeric or outside of Min/Max purchase Price range)")
+                {
+                    string _MinMax_MinMaxPurchasePrice = "MinMaxPurchasePrice";
+                    inputXML = "<MinMaxPurchasePrice>"
+                            + "<JamAuthToken>" + _request.Settings.JamToken + "</JamAuthToken>"
+                            + "<AuthToken>" + _request.Settings.AuthToken + "</AuthToken>"
+                            + "</MinMaxPurchasePrice>"; // - request
+
+                    URL = _ServiceBaseURL + _MinMax_MinMaxPurchasePrice;
+                    innerXML = openpayPOST(URL, inputXML);
+
+                    serializer = new XmlSerializer(typeof(openpayModels.ResponseMinMaxPurchasePrice));
+                    rdr = new StringReader(innerXML);
+                    openpayModels.ResponseMinMaxPurchasePrice resultingMessage1 = (openpayModels.ResponseMinMaxPurchasePrice)serializer.Deserialize(rdr);
+                    _response.MinMaxPurchasePrice = resultingMessage1;
+
+                    if (resultingMessage1.status == "0" && resultingMessage1.reason == "")
+                    {
+                        openpayModels.Error _res_error = new openpayModels.Error();
+                        _res_error.reason = "Ordered price should be > " + resultingMessage1.MinPrice + "(Min Price) and < " + resultingMessage1.MaxPrice + "(Max Price)";
+                        _response.Error = _res_error;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                openpayModels.Error _res_error = new openpayModels.Error();
+                _res_error.reason = ex.Message.ToString();
+                _response.Error = _res_error;
+                string pagegurl = _request.Settings.URL.CallbackURL + "?status=" + ex.Message.ToString() + "";
+                HttpContext.Current.Response.Redirect(pagegurl);
+                // - exception handling code should go here }
+            }
+            return _response;
+        }</pre>
 
 ### You can use the code to convert string to XML for Call-2 Process
 XmlSerializer serializer = new    XmlSerializer(typeof(Model_openpay.ResponseNewOnlineOrder));
