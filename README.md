@@ -7,7 +7,7 @@ The objective of this system is to provide a solution to make payment of the Bil
 
 ### •	To declare some variable/key for openpay
 
-* * You can declare “JamToken” and “AuthToken” key’s value in `<appSettings>` tag in web.config page or it can be declared globally in .cs page.
+* * You can declare “JamToken” and “AuthToken” key’s value in `<appSettings>` tag in web.config page or it can be declared in .cs page.
      `<add key="_JamToken" value="30000000000000889|155f5b95-a40a-4ae5-8273-41ae83fec8c9" />`
 
      `<add key="_AuthToken" value="155f5b95-a40a-4ae5-8273-41ae83fec8c9" />`
@@ -46,7 +46,9 @@ The objective of this system is to provide a solution to make payment of the Bil
      
        
 ### User Parameters from site
-<pre> openpayModels.Request_Call _req_call = new openpayModels.Request_Call();
+<pre> public openpayModels.Request_Call RequestVal()
+        {
+            openpayModels.Request_Call _req_call = new openpayModels.Request_Call();
             openpayModels.Settings _req_Settings = new openpayModels.Settings();
             if (WebConfigurationManager.AppSettings["_Location"] == "AU")
             {
@@ -71,10 +73,41 @@ The objective of this system is to provide a solution to make payment of the Bil
             _req_Settings.URL = _req_URL;
             _req_call.Settings = _req_Settings;
             return _req_call;
-                                          </pre>
+        } </pre>
 
+### How to set URL Tranning/Live
 
-
+public openpayModels.Static_Request StaticRequestVal(string _Lcode, bool IsLive)
+        {
+            openpayModels.Static_Request _sReq = new openpayModels.Static_Request();
+            if (_Lcode.ToUpper().Trim() == "UK")
+            {
+                if (IsLive)
+                {
+                    _sReq.ServiceBaseURL = "https://integration.training.myopenpay.co.uk/JamServiceImpl.svc/";
+                    _sReq.GateWayURL = "https://websales.training.myopenpay.co.uk/";
+                }
+                else
+                {
+                    _sReq.ServiceBaseURL = "https://integration.training.myopenpay.co.uk/JamServiceImpl.svc/";
+                    _sReq.GateWayURL = "https://websales.training.myopenpay.co.uk/";
+                }
+            }
+            else
+            {
+                if (IsLive)
+                {
+                    _sReq.ServiceBaseURL = "https://retailer.myopenpay.com.au/ServiceLive/JAMServiceImpl.svc/";
+                    _sReq.GateWayURL = "https://retailer.myopenpay.com.au/WebSalesLive/";
+                }
+                else
+                {
+                    _sReq.ServiceBaseURL = "https://retailer.myopenpay.com.au/ServiceTraining/JAMServiceImpl.svc/";
+                    _sReq.GateWayURL = "https://retailer.myopenpay.com.au/WebSalesTraining/";
+                }
+            }
+            return _sReq;
+        }
 
 ### Now you have to run the Call-1 method through “NEW ONLINE ORDER” API Which is -
 string inputXML = "`<NewOnlineOrder>`"
